@@ -1,0 +1,20 @@
+{
+  "name": "docsearch-plus-api",
+  "version": "1.0.0",
+  "description": "A document search and Q&A API built with Express",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon  index.js"
+  },
+  "author": "Tripti Shakya",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "nodemon": "^3.1.11"
+  }
+}
