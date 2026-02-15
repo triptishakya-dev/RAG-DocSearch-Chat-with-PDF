@@ -1,14 +1,13 @@
-import express from "express"
+import express from "express";
 
-const app = express()
+const app = express();
 
-const PORT = 3000
+const PORT = 3000;
 
-app.get("/api/test" , (req,res)=> {
-return res.json("health is good")
-})
+app.get("/api/test", (req, res) => {
+  return res.json("health is good");
+});
 
-app.listen(PORT , ()=>{
-    console.log("server is listening")
-})
-
+app.listen(PORT, () => {
+  console.log("server is listening");
+});
