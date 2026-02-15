@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // change to "postgresql" if needed
+  url      = env("DATABASE_URL")
+}
+
+enum IngestionStatus {
+  PENDING
+  PROCESSING
+  INDEXING
+  SUCCEEDED
+  FAILED
+}
+
+enum JobType {
+  INGEST_DOCUMENT
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  title     String
+  sourceUrl String?
+  clientId  String
+  checksum  String? // optional: hash to detect duplicate uploads
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ingestionJobs IngestionJob[]
+  chunks        Chunk[]
+  queries       Query[]
+
+  @@index([clientId])
+}
+
+model IngestionJob {
+  id             String          @id @default(uuid())
+  documentId     String
+  jobType        JobType         @default(INGEST_DOCUMENT)
+  status         IngestionStatus @default(PENDING)
+  attempts       Int             @default(0)
+  maxAttempts    Int             @default(5)
+  lastError      String?
+  idempotencyKey String?
+  lockedAt       DateTime?
+  lockedBy       String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  finishedAt     DateTime?
+
+  document Document @relation(fields: [documentId], references: [id])
+
+  @@unique([documentId, idempotencyKey])
+  @@index([status])
+}
+
+model Chunk {
+  id          String   @id @default(uuid())
+  documentId  String
+  chunkIndex  Int
+  text        String
+  page        Int?
+  startOffset Int?
+  endOffset   Int?
+  embedding   Json // store vector as JSON array [Float]
+  createdAt   DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id])
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+}
+
+model Query {
+  id         String   @id @default(uuid())
+  documentId String
+  question   String
+  answer     String?
+  confidence Float?
+  model      String?
+  debug      Json?
+  createdAt  DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id])
+}
+
+model DeadLetterJob {
+  id             String   @id @default(uuid())
+  ingestionJobId String
+  reason         String
+  payload        Json
+  failedAt       DateTime @default(now())
+}
+
+model IdempotencyKey {
+  key         String   @id
+  scope       String // e.g. "DOCUMENT_UPLOAD", "INGEST_JOB"
+  requestHash String?
+  createdAt   DateTime @default(now())
+}
