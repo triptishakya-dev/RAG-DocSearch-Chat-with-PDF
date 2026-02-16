@@ -38,37 +38,83 @@ export const Header = () => {
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState(0);
   const [uploadStep, setUploadStep] = React.useState<'idle' | 'uploading' | 'chunking' | 'embedding' | 'saving' | 'completed'>('idle');
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
 
-  const handleUpload = () => {
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File size exceeds 10MB limit.");
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    const file = selectedFile;
+    // setIsUploading(true); // Moved down to avoid state update on unmounted component if immediate error
+
+
     setIsUploading(true);
     setUploadStep('uploading');
     setUploadProgress(10);
 
-    // Simulate upload process
-    setTimeout(() => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      // Simulate/Show upload progress for better UX before API completes
       setUploadProgress(30);
       setUploadStep('chunking');
-    }, 2000);
 
-    setTimeout(() => {
+      const response = await fetch('/api/upload-documents', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
       setUploadProgress(60);
       setUploadStep('embedding');
-    }, 4000);
 
-    setTimeout(() => {
+      // Wait a bit to show the embedding step (optional, but consistent with previous UX)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       setUploadProgress(90);
       setUploadStep('saving');
-    }, 7000);
 
-    setTimeout(() => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       setUploadProgress(100);
       setUploadStep('completed');
+      
       setTimeout(() => {
          setIsUploading(false);
          setUploadStep('idle');
          setUploadProgress(0);
+         setSelectedFile(null);
       }, 2000);
-    }, 9000);
+      
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setIsUploading(false);
+      setUploadStep('idle');
+      setUploadProgress(0);
+      alert('Failed to upload document. Please try again.');
+    }
   };
 
   return (
@@ -143,90 +189,112 @@ export const Header = () => {
           
           <Dialog>
             <DialogTrigger asChild>
-              <button className="hidden md:flex bg-zinc-900 text-white hover:bg-zinc-800 transition-colors font-semibold h-9 px-4 text-sm items-center justify-center rounded-md shadow-sm">
+              <button className="hidden md:flex bg-zinc-100 text-black hover:bg-zinc-200 transition-colors font-semibold h-9 px-4 text-sm items-center justify-center rounded-md shadow-sm">
                 <Upload className="mr-2 h-4 w-4" />
-                Upload
+                Upload PDF
               </button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[500px] bg-zinc-950 border-zinc-800 text-zinc-100">
               <DialogHeader>
-                <DialogTitle>Add Documents to Knowledge Base</DialogTitle>
-                <DialogDescription>
-                  Upload your documents (PDF, TXT, MD) to train the AI. It will analyze the content to provide accurate answers.
+                <DialogTitle className="text-xl font-semibold">Upload Document</DialogTitle>
+                <DialogDescription className="text-zinc-400">
+                  Select a PDF to extract insights. We support files up to 10MB.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
+              
+              <div className="grid gap-6 py-4">
                 {isUploading ? (
                   <div className="space-y-6">
                     <div className="flex items-center justify-between text-sm mb-1">
-                       <span className="font-semibold text-zinc-700">Processing Document...</span>
-                       <span className="text-zinc-500">{uploadProgress}%</span>
+                       <span className="font-semibold text-zinc-200">Processing {selectedFile?.name}...</span>
+                       <span className="text-zinc-400 font-mono text-xs">{uploadProgress}%</span>
                     </div>
-                    <Progress value={uploadProgress} className="h-2" />
+                    <Progress value={uploadProgress} className="h-2 bg-zinc-900" indicatorClassName="bg-white" />
                     
                     <div className="space-y-4 mt-6">
-                      <div className="flex items-center gap-3">
-                         <div className={`flex h-8 w-8 items-center justify-center rounded-full border ${uploadStep === 'uploading' || uploadProgress > 10 ? 'bg-zinc-900 border-zinc-900 text-white' : 'border-zinc-200 text-zinc-400'}`}>
-                            {uploadProgress > 30 ? <Check className="h-4 w-4" /> : <Server className="h-4 w-4" />}
+                      <div className="flex items-center gap-4">
+                         <div className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${uploadStep === 'uploading' || uploadProgress > 10 ? 'bg-white border-white text-black scale-100' : 'border-zinc-800 text-zinc-600 scale-95'}`}>
+                            {uploadProgress > 30 ? <Check className="h-5 w-5" /> : <Server className="h-5 w-5" />}
                          </div>
-                         <div className="flex-1">
-                            <p className={`text-sm font-medium ${uploadStep === 'uploading' ? 'text-zinc-900' : 'text-zinc-500'}`}>Uploading to AWS S3</p>
-                            {uploadStep === 'uploading' && <p className="text-xs text-zinc-400">Securely storing your file...</p>}
+                         <div className="flex-1 space-y-1">
+                            <p className={`text-sm font-medium transition-colors ${uploadStep === 'uploading' ? 'text-white' : 'text-zinc-500'}`}>Uploading to Cloud</p>
+                            {uploadStep === 'uploading' && <p className="text-xs text-zinc-400 animate-pulse">Securely storing your file...</p>}
                          </div>
-                         {uploadStep === 'uploading' && <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />}
                       </div>
 
-                      <div className="flex items-center gap-3">
-                         <div className={`flex h-8 w-8 items-center justify-center rounded-full border ${uploadStep === 'chunking' || uploadProgress > 30 ? 'bg-zinc-900 border-zinc-900 text-white' : 'border-zinc-200 text-zinc-400'}`}>
-                             {uploadProgress > 60 ? <Check className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                      <div className="flex items-center gap-4">
+                         <div className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${uploadStep === 'chunking' || uploadProgress > 30 ? 'bg-white border-white text-black scale-100' : 'border-zinc-800 text-zinc-600 scale-95'}`}>
+                             {uploadProgress > 60 ? <Check className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
                          </div>
-                         <div className="flex-1">
-                            <p className={`text-sm font-medium ${uploadStep === 'chunking' ? 'text-zinc-900' : 'text-zinc-500'}`}>Processing & Chunking</p>
-                            {uploadStep === 'chunking' && <p className="text-xs text-zinc-400">Splitting content into manageable parts...</p>}
+                         <div className="flex-1 space-y-1">
+                            <p className={`text-sm font-medium transition-colors ${uploadStep === 'chunking' ? 'text-white' : 'text-zinc-500'}`}>Processing Content</p>
+                            {uploadStep === 'chunking' && <p className="text-xs text-zinc-400 animate-pulse">Analyzing text structure...</p>}
                          </div>
-                         {uploadStep === 'chunking' && <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />}
                       </div>
 
-                      <div className="flex items-center gap-3">
-                         <div className={`flex h-8 w-8 items-center justify-center rounded-full border ${uploadStep === 'embedding' || uploadProgress > 60 ? 'bg-zinc-900 border-zinc-900 text-white' : 'border-zinc-200 text-zinc-400'}`}>
-                             {uploadProgress > 90 ? <Check className="h-4 w-4" /> : <Cpu className="h-4 w-4" />}
+                      <div className="flex items-center gap-4">
+                         <div className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${uploadStep === 'embedding' || uploadProgress > 60 ? 'bg-white border-white text-black scale-100' : 'border-zinc-800 text-zinc-600 scale-95'}`}>
+                             {uploadProgress > 90 ? <Check className="h-5 w-5" /> : <Cpu className="h-5 w-5" />}
                          </div>
-                         <div className="flex-1">
-                            <p className={`text-sm font-medium ${uploadStep === 'embedding' ? 'text-zinc-900' : 'text-zinc-500'}`}>Creating Embeddings</p>
-                            {uploadStep === 'embedding' && <p className="text-xs text-zinc-400">Generating vector representations...</p>}
+                         <div className="flex-1 space-y-1">
+                            <p className={`text-sm font-medium transition-colors ${uploadStep === 'embedding' ? 'text-white' : 'text-zinc-500'}`}>Generating Embeddings</p>
+                            {uploadStep === 'embedding' && <p className="text-xs text-zinc-400 animate-pulse">Creating vector representations...</p>}
                          </div>
-                         {uploadStep === 'embedding' && <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />}
                       </div>
 
-                      <div className="flex items-center gap-3">
-                         <div className={`flex h-8 w-8 items-center justify-center rounded-full border ${uploadStep === 'saving' || uploadProgress === 100 ? 'bg-zinc-900 border-zinc-900 text-white' : 'border-zinc-200 text-zinc-400'}`}>
-                             {uploadProgress === 100 ? <Check className="h-4 w-4" /> : <Database className="h-4 w-4" />}
+                      <div className="flex items-center gap-4">
+                         <div className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 ${uploadStep === 'saving' || uploadProgress === 100 ? 'bg-white border-white text-black scale-100' : 'border-zinc-800 text-zinc-600 scale-95'}`}>
+                             {uploadProgress === 100 ? <Check className="h-5 w-5" /> : <Database className="h-5 w-5" />}
                          </div>
-                         <div className="flex-1">
-                            <p className={`text-sm font-medium ${uploadStep === 'saving' ? 'text-zinc-900' : 'text-zinc-500'}`}>Saving to QdrantDB</p>
-                            {uploadStep === 'saving' && <p className="text-xs text-zinc-400">Indexing for fast retrieval...</p>}
+                         <div className="flex-1 space-y-1">
+                            <p className={`text-sm font-medium transition-colors ${uploadStep === 'saving' ? 'text-white' : 'text-zinc-500'}`}>Indexing Data</p>
+                            {uploadStep === 'saving' && <p className="text-xs text-zinc-400 animate-pulse">Making it searchable...</p>}
                          </div>
-                         {uploadStep === 'saving' && <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />}
                       </div>
                     </div>
                   </div>
                 ) : (
-                <div className="flex items-center justify-center w-full">
-                  <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-64 border-2 border-zinc-300 border-dashed rounded-lg cursor-pointer bg-zinc-50 hover:bg-zinc-100 transition-colors">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="w-10 h-10 mb-4 text-zinc-400" />
-                      <p className="mb-2 text-sm text-zinc-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                      <p className="text-xs text-zinc-500">Supports PDF, TXT, MD, DOCX (Max 10MB)</p>
+                  <>
+                  {!selectedFile ? (
+                    <div className="flex items-center justify-center w-full">
+                      <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-64 border-2 border-zinc-800 border-dashed rounded-xl cursor-pointer bg-zinc-900/50 hover:bg-zinc-900 hover:border-zinc-600 transition-all group">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <div className="p-4 rounded-full bg-zinc-900 border border-zinc-800 mb-4 group-hover:scale-110 transition-transform">
+                             <Upload className="w-8 h-8 text-zinc-400 group-hover:text-white transition-colors" />
+                          </div>
+                          <p className="mb-2 text-sm text-zinc-400"><span className="font-semibold text-zinc-200">Click to upload</span> or drag and drop</p>
+                          <p className="text-xs text-zinc-500">PDF, TXT (Max 10MB)</p>
+                        </div>
+                        <input id="dropzone-file" type="file" className="hidden" accept=".pdf,.txt,.md" onChange={handleFileSelect} />
+                      </label>
                     </div>
-                    <input id="dropzone-file" type="file" className="hidden" onChange={handleUpload} />
-                  </label>
-                </div>
+                  ) : (
+                    <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center border border-red-500/20 text-red-500">
+                           <FileText className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                           <p className="text-sm font-medium text-zinc-100 truncate">{selectedFile.name}</p>
+                           <p className="text-xs text-zinc-500">{formatFileSize(selectedFile.size)}</p>
+                        </div>
+                        <button onClick={() => setSelectedFile(null)} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors">
+                           <span className="sr-only">Remove</span>
+                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+                  )}
+                  </>
                 )}
               </div>
               <DialogFooter>
                 {!isUploading && (
-                  <button type="submit" onClick={handleUpload} className="bg-zinc-900 text-white hover:bg-zinc-800 h-9 px-4 rounded-md text-sm font-medium transition-colors">
-                    Upload files
+                  <button 
+                    type="submit" 
+                    onClick={handleUpload} 
+                    disabled={!selectedFile}
+                    className="w-full bg-white text-black hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold h-10 px-4 rounded-lg text-sm transition-all shadow-sm active:scale-[0.98]"
+                  >
+                    {selectedFile ? 'Start Upload' : 'Select a File'}
                   </button>
                 )}
               </DialogFooter>
