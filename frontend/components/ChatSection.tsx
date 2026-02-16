@@ -12,15 +12,47 @@ export const ChatSection = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
 
-  const handleSendMessage = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
-    const newMessages = [
-      ...messages,
-      { role: 'user' as const, text: inputValue },
-      { role: 'bot' as const, text: 'I am processing your request...' }, // Mock response
-    ];
-    setMessages(newMessages);
+
+    const userMessage = { role: 'user' as const, text: inputValue };
+    setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:3000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question: userMessage.text }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'bot', text: data.answer },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'bot', text: 'Sorry, something went wrong. Please try again.' },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'bot', text: 'Error connecting to the server.' },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,6 +86,13 @@ export const ChatSection = () => {
             </div>
           </div>
         ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-zinc-50 border border-zinc-200 text-zinc-500 rounded-2xl rounded-bl-none px-5 py-3.5 text-sm leading-relaxed shadow-sm italic">
+              Thinking...
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input Area */}
@@ -64,7 +103,8 @@ export const ChatSection = () => {
             className="flex-1 border-zinc-200 focus-visible:ring-zinc-900 focus-visible:border-zinc-900 bg-zinc-50"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            disabled={isLoading}
+            onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
           />
           <Button 
             onClick={handleSendMessage}
