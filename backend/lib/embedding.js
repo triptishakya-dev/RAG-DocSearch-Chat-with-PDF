@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const embeddings = new GoogleGenerativeAIEmbeddings({
-    model: "text-embedding-004", // Updated to a newer model
+    model: "gemini-embedding-001", // Updated to correct model name from list
     apiKey: process.env.GEMINI_API_KEY,
 });
 
