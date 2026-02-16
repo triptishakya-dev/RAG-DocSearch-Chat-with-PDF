@@ -14,10 +14,22 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.990.0",
+    "@langchain/community": "^1.1.15",
+    "@langchain/core": "^1.1.24",
+    "@langchain/google-genai": "^2.1.18",
+    "@langchain/textsplitters": "^1.0.1",
     "@prisma/client": "^6.19.2",
+    "@qdrant/js-client-rest": "^1.16.2",
+    "bullmq": "^5.69.3",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "nodemon": "^3.1.11"
+    "ioredis": "^5.9.3",
+    "langchain": "^1.2.24",
+    "multer": "^2.0.2",
+    "nodemon": "^3.1.11",
+    "pdf-parse": "^1.1.1",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "prisma": "^6.19.2"
