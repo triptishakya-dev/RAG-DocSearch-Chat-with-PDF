@@ -1,4 +1,9 @@
 import { pdfQueue } from "../lib/queue.js";
+import crypto from "crypto";
+import fs from "fs";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export const uploadDocument = async (req, res) => {
     try {
@@ -13,12 +18,37 @@ export const uploadDocument = async (req, res) => {
         const { path, originalname, mimetype } = req.file;
         const { clientId } = req.body;
 
+        // Calculate checksum
+        const fileBuffer = fs.readFileSync(path);
+        const checksum = crypto.createHash('md5').update(fileBuffer).digest('hex');
+
+        // Check for duplicate
+        const existingDocument = await prisma.document.findFirst({
+            where: {
+                checksum: checksum,
+                clientId: clientId || "default"
+            }
+        });
+
+        if (existingDocument) {
+            // Delete the uploaded file since it's a duplicate
+            if (fs.existsSync(path)) {
+                fs.unlinkSync(path);
+            }
+            console.log(`Duplicate document upload attempt. Checksum: ${checksum}`);
+            return res.status(409).json({
+                error: "Duplicate document",
+                message: "This document has already been uploaded."
+            });
+        }
+
         // Add job to queue
         await pdfQueue.add("process-pdf", {
             filePath: path,
             originalName: originalname,
             mimeType: mimetype,
             clientId: clientId || "default",
+            checksum: checksum,
         });
 
         res.status(202).json({
@@ -31,8 +61,7 @@ export const uploadDocument = async (req, res) => {
     }
 };
 
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+
 
 export const getDocuments = async (req, res) => {
     try {
