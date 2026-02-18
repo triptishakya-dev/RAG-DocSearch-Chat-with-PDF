@@ -194,11 +194,11 @@ export const Header = () => {
                 Upload PDF
               </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] bg-zinc-950 border-zinc-800 text-zinc-100">
+            <DialogContent className={`${selectedFile ? 'sm:max-w-[800px]' : 'sm:max-w-[500px]'} bg-zinc-950 border-zinc-800 text-zinc-100 transition-all duration-300`}>
               <DialogHeader>
                 <DialogTitle className="text-xl font-semibold">Upload Document</DialogTitle>
                 <DialogDescription className="text-zinc-400">
-                  Select a PDF to extract insights. We support files up to 10MB.
+                  {selectedFile ? `Selected: ${selectedFile.name} (${formatFileSize(selectedFile.size)})` : "Select a PDF to extract insights. We support files up to 10MB."}
                 </DialogDescription>
               </DialogHeader>
               
@@ -269,15 +269,30 @@ export const Header = () => {
                       </label>
                     </div>
                   ) : (
-                    <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-lg bg-red-500/10 flex items-center justify-center border border-red-500/20 text-red-500">
-                           <FileText className="w-6 h-6" />
+                    <div className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl p-8 flex items-center gap-6">
+                        <div className="flex-shrink-0">
+                           <div className="h-32 w-32 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center border border-red-500/30 shadow-2xl">
+                              <FileText className="w-16 h-16 text-red-500" />
+                           </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                           <p className="text-sm font-medium text-zinc-100 truncate">{selectedFile.name}</p>
-                           <p className="text-xs text-zinc-500">{formatFileSize(selectedFile.size)}</p>
+                        <div className="flex-1 min-w-0 grid gap-3">
+                           <div className="flex items-center gap-3 border-b border-zinc-800 pb-2">
+                             <p className="text-lg font-semibold text-zinc-100 truncate flex-1">{selectedFile.name}</p>
+                             <span className="text-xs font-mono text-zinc-500 bg-zinc-800/50 px-2 py-1 rounded">{new Date(selectedFile.lastModified).toLocaleDateString()}</span>
+                           </div>
+                           <div className="flex items-center gap-6 mt-1">
+                              <div>
+                                <p className="text-xs text-zinc-500 mb-1">File Size</p>
+                                <span className="text-4xl font-bold text-white tracking-tight">{formatFileSize(selectedFile.size)}</span>
+                              </div>
+                              <div className="h-10 w-px bg-zinc-800" />
+                              <div>
+                                <p className="text-xs text-zinc-500 mb-1">Type</p>
+                                <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">{selectedFile.type.split('/')[1]?.toUpperCase() || 'FILE'}</span>
+                              </div>
+                           </div>
                         </div>
-                        <button onClick={() => setSelectedFile(null)} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors">
+                        <button onClick={() => setSelectedFile(null)} className="self-start -mt-2 -mr-2 p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors">
                            <span className="sr-only">Remove</span>
                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                         </button>
