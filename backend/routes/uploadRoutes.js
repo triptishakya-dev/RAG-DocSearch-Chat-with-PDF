@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { uploadDocument } from "../controllers/uploadController.js";
+import { uploadDocument, getDocuments } from "../controllers/uploadController.js";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -15,5 +15,8 @@ router.post("/upload-documents", (req, res, next) => {
         next();
     });
 }, uploadDocument);
+
+// GET /documents
+router.get("/documents", getDocuments);
 
 export default router;  

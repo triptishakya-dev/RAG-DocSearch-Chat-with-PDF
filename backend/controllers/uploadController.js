@@ -30,3 +30,18 @@ export const uploadDocument = async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 };
+
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+
+export const getDocuments = async (req, res) => {
+    try {
+        const documents = await prisma.document.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(documents);
+    } catch (error) {
+        console.error("Error fetching documents:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
