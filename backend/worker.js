@@ -17,7 +17,7 @@ const prisma = new PrismaClient();
 const qdrant = new QdrantClient({ host: "localhost", port: 6333 });
 
 const worker = new Worker("pdf-processing", async (job) => {
-    const { filePath, originalName, mimeType, clientId } = job.data;
+    const { filePath, originalName, mimeType, clientId, checksum } = job.data;
     console.log(`Processing job ${job.id} for file: ${originalName}`);
 
     try {
@@ -32,6 +32,7 @@ const worker = new Worker("pdf-processing", async (job) => {
                 title: originalName,
                 sourceUrl: s3Url,
                 clientId: clientId || "default", // Adjust as needed
+                checksum: checksum,
                 updatedAt: new Date(), // Explicitly set updatedAt if needed, though @updatedAt handles it
             },
         });
