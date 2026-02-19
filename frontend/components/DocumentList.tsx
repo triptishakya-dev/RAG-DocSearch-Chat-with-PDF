@@ -14,11 +14,23 @@ interface Document {
   clientId: string;
 }
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+
 export const DocumentList = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const fetchDocuments = async () => {
     setIsLoading(true);
@@ -41,6 +53,11 @@ export const DocumentList = () => {
     fetchDocuments();
   }, []);
 
+  // Reset to first page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
+
   const filteredDocs = documents
     .filter(doc => doc.title.toLowerCase().includes(filter.toLowerCase()))
     .sort((a, b) => {
@@ -48,6 +65,11 @@ export const DocumentList = () => {
         ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentDocuments = filteredDocs.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredDocs.length / itemsPerPage);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(undefined, {
@@ -103,53 +125,110 @@ export const DocumentList = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 auto-rows-min">
-              {filteredDocs.map((doc) => (
-                <Card key={doc.id} className="group hover:border-primary/50 hover:shadow-lg transition-all bg-card border-border/40 duration-300 overflow-hidden flex flex-col">
-                  <div className="flex flex-col h-full">
-                    <div className="flex flex-row items-start justify-between p-4 pb-0">
-                      <div className="p-3 bg-muted text-foreground rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-sm">
-                        <FileText className="w-6 h-6" />
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 auto-rows-min mb-8">
+                {currentDocuments.map((doc) => (
+                  <Card key={doc.id} className="group hover:border-primary/50 hover:shadow-lg transition-all bg-card border-border/40 duration-300 overflow-hidden flex flex-col">
+                    <div className="flex flex-col h-full">
+                      <div className="flex flex-row items-start justify-between p-4 pb-0">
+                        <div className="p-3 bg-muted text-foreground rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-sm">
+                          <FileText className="w-6 h-6" />
+                        </div>
+                      </div>
+
+                      <div className="px-4 py-3 flex-1">
+                        <h3 className="font-bold text-black truncate text-sm leading-snug" title={doc.title}>
+                          {doc.title}
+                        </h3>
+                        <div className="text-xs text-black/60 mt-2 flex gap-2 items-center font-medium">
+                          <span>PDF</span>
+                          <span className="w-1 h-1 rounded-full bg-black/20"></span>
+                          <span>{formatDate(doc.createdAt)}</span>
+                        </div>
+                      </div>
+
+                      <div className="px-4 py-3 mt-auto flex gap-2 border-t border-border/40 bg-muted/20">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 h-8 text-xs border-border/60 hover:bg-background hover:border-primary/30 hover:text-primary font-medium"
+                          onClick={() => window.open(doc.sourceUrl || '#', '_blank')}
+                          disabled={!doc.sourceUrl}
+                        >
+                          <Download className="w-3 h-3 mr-2" />
+                          Download
+                        </Button>
                       </div>
                     </div>
+                  </Card>
+                ))}
 
-                    <div className="px-4 py-3 flex-1">
-                      <h3 className="font-bold text-black truncate text-sm leading-snug" title={doc.title}>
-                        {doc.title}
-                      </h3>
-                      <div className="text-xs text-black/60 mt-2 flex gap-2 items-center font-medium">
-                        <span>PDF</span>
-                        <span className="w-1 h-1 rounded-full bg-black/20"></span>
-                        <span>{formatDate(doc.createdAt)}</span>
-                      </div>
+                {!isLoading && filteredDocs.length === 0 && (
+                  <div className="col-span-full py-20 text-center border-2 border-dashed border-border/40 rounded-xl bg-muted/10">
+                    <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Search className="w-8 h-8 text-muted-foreground" />
                     </div>
-
-                    <div className="px-4 py-3 mt-auto flex gap-2 border-t border-border/40 bg-muted/20">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 h-8 text-xs border-border/60 hover:bg-background hover:border-primary/30 hover:text-primary font-medium"
-                        onClick={() => window.open(doc.sourceUrl || '#', '_blank')}
-                        disabled={!doc.sourceUrl}
-                      >
-                        <Download className="w-3 h-3 mr-2" />
-                        Download
-                      </Button>
-                    </div>
+                    <h3 className="text-lg font-medium text-foreground">No documents found</h3>
+                    <p className="text-muted-foreground text-sm mt-1">Upload a document to get started.</p>
                   </div>
-                </Card>
-              ))}
+                )}
+              </div>
 
-              {!isLoading && filteredDocs.length === 0 && (
-                <div className="col-span-full py-20 text-center border-2 border-dashed border-border/40 rounded-xl bg-muted/10">
-                  <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-medium text-foreground">No documents found</h3>
-                  <p className="text-muted-foreground text-sm mt-1">Upload a document to get started.</p>
+              {/* Pagination Controls */}
+              {filteredDocs.length > itemsPerPage && (
+                <div className="py-4 border-t border-border/40 mt-auto">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Logic to show limited pages if many pages exist could go here
+                        // For now, showing all or simple logic
+                        if (
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 1 && page <= currentPage + 1)
+                        ) {
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                isActive={page === currentPage}
+                                onClick={() => setCurrentPage(page)}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        } else if (
+                          page === currentPage - 2 ||
+                          page === currentPage + 2
+                        ) {
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          )
+                        }
+                        return null;
+                      })}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>
