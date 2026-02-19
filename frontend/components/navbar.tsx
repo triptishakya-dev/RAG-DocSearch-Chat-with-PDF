@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
 import { ModeToggle } from "@/components/mode-toggle"
-import { Menu, Package2, Search, Upload, LayoutDashboard, User, Check, Loader2, FileText, Database, Server, Cpu } from "lucide-react"
+import { Menu, Package2, Search, Upload, LayoutDashboard, User, Check, Loader2, FileText, Database, Server, Cpu, Home, HelpCircle } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 
@@ -150,14 +150,14 @@ export const Header = () => {
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-lg font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200 px-5 py-3 h-auto data-[active]:bg-muted data-[active]:text-foreground", pathname === '/' && "bg-muted text-foreground font-semibold shadow-sm")}>
                   <Link href="/">
-                    Dashboard
+                    Home
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-lg font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200 px-5 py-3 h-auto data-[active]:bg-muted data-[active]:text-foreground", pathname === '/query' && "bg-muted text-foreground font-semibold shadow-sm")}>
-                  <Link href="/query">
-                    Query
+                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-lg font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200 px-5 py-3 h-auto data-[active]:bg-muted data-[active]:text-foreground", pathname === '/#how-it-works' && "bg-muted text-foreground font-semibold shadow-sm")}>
+                  <Link href="/#how-it-works">
+                    How it Works
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
@@ -189,13 +189,13 @@ export const Header = () => {
             </div>
             <div className="flex flex-col gap-4 py-8 px-2">
               <Link href="/" className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
-                <LayoutDashboard className="h-5 w-5" /> Dashboard
+                <Home className="h-5 w-5" /> Home
               </Link>
               <Link href="/upload" className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/upload' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
                 <Upload className="h-5 w-5" /> Upload
               </Link>
-              <Link href="/query" className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/query' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
-                <Search className="h-5 w-5" /> Query
+              <Link href="/#how-it-works" className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/#how-it-works' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
+                <HelpCircle className="h-5 w-5" /> How it Works
               </Link>
             </div>
           </SheetContent>
@@ -207,7 +207,7 @@ export const Header = () => {
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button size="sm" className="hidden md:flex font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
+              <Button size="sm" className="hidden px-4 py-6 md:flex font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
                 <Upload className="mr-2 h-4 w-4" />
                 Upload PDF
               </Button>
@@ -325,7 +325,7 @@ export const Header = () => {
 
           <div className="flex items-center gap-2">
             <ModeToggle />
-           
+
           </div>
         </div>
       </div>
