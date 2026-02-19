@@ -76,7 +76,7 @@ export const ChatSection = () => {
       {/* Header */}
       <div className="bg-background/80 backdrop-blur-xl p-4 border-b border-border/40 flex justify-between items-center shrink-0 h-16 sticky top-0 z-10">
         <div>
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2 tracking-tight">
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2 tracking-tight">
             <div className="p-1.5 bg-primary rounded-lg text-primary-foreground">
               <Sparkles className="w-3.5 h-3.5" />
             </div>
