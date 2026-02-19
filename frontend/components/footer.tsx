@@ -3,33 +3,35 @@ import { Package2 } from "lucide-react"
 export const Footer = () => {
   return (
     <footer className="border-t border-border/40 bg-background/95 backdrop-blur-sm">
-      <div className="container flex flex-col items-center justify-between gap-4 py-2 md:h-16 md:flex-row md:py-0 max-w-screen-2xl">
-        <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Package2 className="h-4 w-4" />
+      <div className="w-full flex flex-col items-center justify-between gap-4 py-4 md:h-16 md:flex-row md:py-0 px-10">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Package2 className="h-5 w-5" />
           </div>
-          <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            Built by{" "}
-            <a
-              href="#"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium underline underline-offset-4 hover:text-foreground transition-colors"
-            >
-              DocSearch+ Team
-            </a>
-            . The source code is available on{" "}
-            <a
-              href="https://github.com/triptishakya-dev"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium underline underline-offset-4 hover:text-foreground transition-colors"
-            >
-              GitHub
-            </a>
-            .
-          </p>
+          <span className="font-semibold text-lg">DocSearch+</span>
         </div>
+
+        <p className="text-center text-sm leading-loose text-muted-foreground md:text-right">
+          Built by{" "}
+          <a
+            href="https://github.com/triptishakya-dev"
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium underline underline-offset-4 hover:text-primary transition-colors"
+          >
+            Tripti Shakya
+          </a>
+          . The source code is available on{" "}
+          <a
+            href="https://github.com/triptishakya-dev"
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium underline underline-offset-4 hover:text-primary transition-colors"
+          >
+            GitHub
+          </a>
+          .
+        </p>
       </div>
     </footer>
   );
