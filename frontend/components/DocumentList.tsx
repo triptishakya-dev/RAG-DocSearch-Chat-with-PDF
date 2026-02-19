@@ -23,6 +23,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 export const DocumentList = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -30,6 +39,7 @@ export const DocumentList = () => {
   const [filter, setFilter] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const itemsPerPage = 8;
 
   const fetchDocuments = async () => {
@@ -93,7 +103,7 @@ export const DocumentList = () => {
           <p className="text-muted-foreground text-sm mt-1 font-medium">Manage and organize your knowledge base.</p>
         </div>
 
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-2 w-full sm:w-auto items-center">
           <div className="relative flex-1 sm:w-72">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -102,6 +112,26 @@ export const DocumentList = () => {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
+          </div>
+          <div className="flex items-center border border-border/60 rounded-md bg-background">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-9 w-9 rounded-none rounded-l-md border-r border-border/60 ${viewMode === 'card' ? 'bg-muted text-foreground' : 'text-muted-foreground'}`}
+              onClick={() => setViewMode('card')}
+              title="Card View"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-9 w-9 rounded-none rounded-r-md ${viewMode === 'table' ? 'bg-muted text-foreground' : 'text-muted-foreground'}`}
+              onClick={() => setViewMode('table')}
+              title="Table View"
+            >
+              <List className="w-4 h-4" />
+            </Button>
           </div>
           <Button variant="outline" size="icon" className="shrink-0 border-border/60 hover:bg-muted" onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}>
             <SortAsc className={`w-4 h-4 transition-transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
@@ -115,7 +145,7 @@ export const DocumentList = () => {
       {/* Content Area */}
       <div className="flex-1 overflow-hidden flex flex-col pt-6 px-8">
 
-        {/* Documents Grid/List */}
+        {/* Documents Content */}
         <div className="flex-1 overflow-y-auto pb-20 pr-2">
           {isLoading && documents.length === 0 ? (
             <div className="flex items-center justify-center h-64">
@@ -126,53 +156,100 @@ export const DocumentList = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 auto-rows-min mb-8">
-                {currentDocuments.map((doc) => (
-                  <Card key={doc.id} className="group hover:border-primary/50 hover:shadow-lg transition-all bg-card border-border/40 duration-300 overflow-hidden flex flex-col">
-                    <div className="flex flex-col h-full">
-                      <div className="flex flex-row items-start justify-between p-4 pb-0">
-                        <div className="p-3 bg-muted text-foreground rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-sm">
-                          <FileText className="w-6 h-6" />
+              {viewMode === 'card' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 auto-rows-min mb-8">
+                  {currentDocuments.map((doc) => (
+                    <Card key={doc.id} className="group hover:border-primary/50 hover:shadow-lg transition-all bg-card border-border/40 duration-300 overflow-hidden flex flex-col">
+                      <div className="flex flex-col h-full">
+                        <div className="flex flex-row items-start justify-between p-4 pb-0">
+                          <div className="p-3 bg-muted text-foreground rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-sm">
+                            <FileText className="w-6 h-6" />
+                          </div>
+                        </div>
+
+                        <div className="px-4 py-3 flex-1">
+                          <h3 className="font-bold text-black truncate text-sm leading-snug" title={doc.title}>
+                            {doc.title}
+                          </h3>
+                          <div className="text-xs text-black/60 mt-2 flex gap-2 items-center font-medium">
+                            <span>PDF</span>
+                            <span className="w-1 h-1 rounded-full bg-black/20"></span>
+                            <span>{formatDate(doc.createdAt)}</span>
+                          </div>
+                        </div>
+
+                        <div className="px-4 py-3 mt-auto flex gap-2 border-t border-border/40 bg-muted/20">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-8 text-xs border-border/60 hover:bg-background hover:border-primary/30 hover:text-primary font-medium"
+                            onClick={() => window.open(doc.sourceUrl || '#', '_blank')}
+                            disabled={!doc.sourceUrl}
+                          >
+                            <Download className="w-3 h-3 mr-2" />
+                            Download
+                          </Button>
                         </div>
                       </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-md border border-border/40 mb-8 overflow-hidden bg-card">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow>
+                        <TableHead className="w-[400px]">Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Date Uploaded</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {currentDocuments.map((doc) => (
+                        <TableRow key={doc.id} className="hover:bg-muted/30">
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-muted rounded-md text-foreground">
+                                <FileText className="w-4 h-4" />
+                              </div>
+                              <span className="truncate max-w-[300px]" title={doc.title}>{doc.title}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                              PDF
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{formatDate(doc.createdAt)}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => window.open(doc.sourceUrl || '#', '_blank')}
+                              disabled={!doc.sourceUrl}
+                            >
+                              <Download className="w-4 h-4" />
+                              <span className="sr-only">Download</span>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
 
-                      <div className="px-4 py-3 flex-1">
-                        <h3 className="font-bold text-black truncate text-sm leading-snug" title={doc.title}>
-                          {doc.title}
-                        </h3>
-                        <div className="text-xs text-black/60 mt-2 flex gap-2 items-center font-medium">
-                          <span>PDF</span>
-                          <span className="w-1 h-1 rounded-full bg-black/20"></span>
-                          <span>{formatDate(doc.createdAt)}</span>
-                        </div>
-                      </div>
-
-                      <div className="px-4 py-3 mt-auto flex gap-2 border-t border-border/40 bg-muted/20">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 h-8 text-xs border-border/60 hover:bg-background hover:border-primary/30 hover:text-primary font-medium"
-                          onClick={() => window.open(doc.sourceUrl || '#', '_blank')}
-                          disabled={!doc.sourceUrl}
-                        >
-                          <Download className="w-3 h-3 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-
-                {!isLoading && filteredDocs.length === 0 && (
-                  <div className="col-span-full py-20 text-center border-2 border-dashed border-border/40 rounded-xl bg-muted/10">
-                    <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Search className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-medium text-foreground">No documents found</h3>
-                    <p className="text-muted-foreground text-sm mt-1">Upload a document to get started.</p>
+              {!isLoading && filteredDocs.length === 0 && (
+                <div className="col-span-full py-20 text-center border-2 border-dashed border-border/40 rounded-xl bg-muted/10 my-4">
+                  <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-8 h-8 text-muted-foreground" />
                   </div>
-                )}
-              </div>
+                  <h3 className="text-lg font-medium text-foreground">No documents found</h3>
+                  <p className="text-muted-foreground text-sm mt-1">Upload a document to get started.</p>
+                </div>
+              )}
 
               {/* Pagination Controls */}
               {filteredDocs.length > itemsPerPage && (
