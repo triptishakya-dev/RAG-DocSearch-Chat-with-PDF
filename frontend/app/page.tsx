@@ -7,18 +7,16 @@ import { DocumentList } from '@/components/DocumentList';
 // --- Main Page Component ---
 const Page = () => {
   return (
-    <div className="h-screen w-full bg-white overflow-hidden flex flex-col">
-      <main className="flex-1 flex overflow-hidden w-full">
-         {/* Chat Section - Left Side - Fixed Width (e.g., 400px or 30%) */}
-         <div className="w-[400px] shrink-0 h-full border-r border-slate-200 z-10 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
-            <ChatSection />
-         </div>
+    <div className="h-[calc(100vh-4rem)] w-full bg-background overflow-hidden flex flex-col md:flex-row">
+      {/* Chat Section - Left Side - Fixed Width (e.g., 400px or 30%) on Desktop */}
+      <div className="w-full md:w-[450px] shrink-0 h-[50vh] md:h-full border-b md:border-b-0 md:border-r border-border/40 z-10 shadow-xl shadow-black/5 bg-background">
+        <ChatSection />
+      </div>
 
-         {/* Document List - Right Side - Flexible Width */}
-         <div className="flex-1 h-full min-w-0 bg-slate-50/30">
-             <DocumentList />
-         </div>
-      </main>
+      {/* Document List - Right Side - Flexible Width */}
+      <div className="flex-1 h-[50vh] md:h-full min-w-0 bg-muted/20">
+        <DocumentList />
+      </div>
     </div>
   );
 };
