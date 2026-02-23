@@ -226,7 +226,7 @@ export default function HowItWorksPage() {
                             {
                                 category: "AI & Vector",
                                 techs: [
-                                    { name: "Gemini 2.5", icon: "🤖" },
+                                    { name: "Gemini 1.5", sub: "LLM" },
                                     { name: "Qdrant DB", icon: "🎯" },
 
 
