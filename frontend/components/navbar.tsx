@@ -207,8 +207,8 @@ export const Header = () => {
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button size="sm" className="hidden px-4 py-6 md:flex font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
-                <Upload className="mr-2 h-4 w-4" />
+              <Button size="sm" className="hidden px-6 py-6 md:flex font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
+                <Upload className="mr-2 h-4 w-8 " />
                 Upload PDF
               </Button>
             </DialogTrigger>
